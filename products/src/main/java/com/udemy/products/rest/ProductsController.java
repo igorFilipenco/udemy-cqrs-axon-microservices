@@ -1,4 +1,4 @@
-package com.udemy.cqrsaxon.controller.rest;
+package com.udemy.products.rest;
 
 
 import org.springframework.web.bind.annotation.*;

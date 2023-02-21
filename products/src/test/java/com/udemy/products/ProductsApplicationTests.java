@@ -1,13 +1,13 @@
-package com.udemy.cqrsaxon;
+package com.udemy.products;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class CqrsaxonApplicationTests {
+class ProductsApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }
