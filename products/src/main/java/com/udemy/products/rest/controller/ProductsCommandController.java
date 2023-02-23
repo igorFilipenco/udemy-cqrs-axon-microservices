@@ -1,25 +1,29 @@
-package com.udemy.products.rest;
-
+package com.udemy.products.rest.controller;
 
 import com.udemy.products.command.CreateProductCommand;
+import com.udemy.products.rest.CreateProductRestModel;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/products")
-public class ProductsController {
+public class ProductsCommandController {
 
     private final Environment env;
     private final CommandGateway commandGateway;
+    private final QueryGateway queryGateway;
 
-    public ProductsController(Environment env, CommandGateway commandGateway) {
+    public ProductsCommandController(Environment env, CommandGateway commandGateway, QueryGateway queryGateway) {
         this.env = env;
         this.commandGateway = commandGateway;
+        this.queryGateway = queryGateway;
     }
 
     @PostMapping
@@ -39,11 +43,6 @@ public class ProductsController {
         }
 
         return result;
-    }
-
-    @GetMapping
-    public String getProducts() {
-        return "Products!";
     }
 
     @PutMapping

@@ -1,4 +1,4 @@
-package com.udemy.products.core.repository.data;
+package com.udemy.products.core.data;
 
 import lombok.Builder;
 import lombok.Data;

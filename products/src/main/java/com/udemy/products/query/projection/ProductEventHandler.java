@@ -1,8 +1,8 @@
 package com.udemy.products.query.projection;
 
 
-import com.udemy.products.core.repository.data.ProductEntity;
-import com.udemy.products.core.repository.entity.ProductsRepository;
+import com.udemy.products.core.data.ProductEntity;
+import com.udemy.products.core.repository.ProductsRepository;
 import com.udemy.products.event.ProductCreatedEvent;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.beans.BeanUtils;
