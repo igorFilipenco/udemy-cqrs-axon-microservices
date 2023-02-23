@@ -8,6 +8,7 @@ import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.UUID;
 
 
@@ -27,7 +28,7 @@ public class ProductsCommandController {
     }
 
     @PostMapping
-    public String createProduct(@RequestBody CreateProductRestModel createProductRestModel) {
+    public String createProduct(@Valid @RequestBody CreateProductRestModel createProductRestModel) {
         CreateProductCommand command = CreateProductCommand.builder()
                 .productId(UUID.randomUUID().toString())
                 .title(createProductRestModel.getTitle())
