@@ -3,6 +3,7 @@ package com.udemy.products.query;
 
 import com.udemy.products.core.repository.ProductsRepository;
 import com.udemy.products.rest.CreateProductRestModel;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ import java.util.List;
 
 
 @Component
+@ProcessingGroup("product-group")
 public class ProductsQueryHandler {
     ProductsRepository repository;
 

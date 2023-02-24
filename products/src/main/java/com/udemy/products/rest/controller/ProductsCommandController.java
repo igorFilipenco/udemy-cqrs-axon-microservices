@@ -35,15 +35,14 @@ public class ProductsCommandController {
                 .price(createProductRestModel.getPrice())
                 .quantity(createProductRestModel.getQuantity())
                 .build();
-        String result = "";
 
-        try {
-            result = commandGateway.sendAndWait(command);
-        } catch (Exception e) {
-            log.error("Product was not created");
-        }
+//        try {
+//            result =
+//        } catch (Exception e) {
+//            log.error("Product was not created");
+//        }
 
-        return result;
+        return commandGateway.sendAndWait(command);
     }
 
     @PutMapping
