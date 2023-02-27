@@ -19,7 +19,6 @@ public class ProductLookupEntity implements Serializable {
     private static final long serialVersionUID = 2813181214954614378L;
 
     @Id
-    @Column(unique = true)
     private String productId;
     @Column(unique = true)
     private String title;

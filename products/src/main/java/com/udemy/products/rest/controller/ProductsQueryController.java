@@ -29,9 +29,8 @@ public class ProductsQueryController {
     @GetMapping
     public List<CreateProductRestModel> getProducts() {
         FindProductsQuery query = new FindProductsQuery();
-        List<CreateProductRestModel> products = queryGateway.query(query,
-                ResponseTypes.multipleInstancesOf(CreateProductRestModel.class)).join();
 
-        return products;
+        return queryGateway.query(query,
+                ResponseTypes.multipleInstancesOf(CreateProductRestModel.class)).join();
     }
 }

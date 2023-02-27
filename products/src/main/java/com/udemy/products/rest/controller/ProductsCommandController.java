@@ -36,12 +36,6 @@ public class ProductsCommandController {
                 .quantity(createProductRestModel.getQuantity())
                 .build();
 
-//        try {
-//            result =
-//        } catch (Exception e) {
-//            log.error("Product was not created");
-//        }
-
         return commandGateway.sendAndWait(command);
     }
 

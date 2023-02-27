@@ -1,7 +1,9 @@
 package com.udemy.products;
 
 import com.udemy.products.command.interceptor.CreateProductCommandInterceptor;
+import com.udemy.products.core.data.validation.ProductServiceEventsErrorHandler;
 import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.config.EventProcessingConfigurer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,5 +22,10 @@ public class ProductsApplication {
     public void registerCreateProductCommandInterceptor(ApplicationContext context,
                                                         CommandBus commandBus) {
         commandBus.registerDispatchInterceptor(context.getBean(CreateProductCommandInterceptor.class));
+    }
+
+    @Autowired
+    public void configure(EventProcessingConfigurer config) {
+        config.registerListenerInvocationErrorHandler("product-group", conf -> new ProductServiceEventsErrorHandler());
     }
 }
