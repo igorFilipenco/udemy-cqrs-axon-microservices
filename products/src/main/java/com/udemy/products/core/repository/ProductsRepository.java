@@ -7,6 +7,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProductsRepository extends JpaRepository<ProductEntity, String> {
     ProductEntity findByProductId(String id);
-
-//    ProductEntity findProductByIdOrTitle(String id, String title);
 }
