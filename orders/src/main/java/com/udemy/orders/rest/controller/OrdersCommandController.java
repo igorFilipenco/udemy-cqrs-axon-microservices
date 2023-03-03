@@ -5,7 +5,6 @@ import com.udemy.orders.core.data.enums.OrderStatus;
 import com.udemy.orders.rest.dto.OrderDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,17 +19,15 @@ public class OrdersCommandController {
 
     private final Environment env;
     private final CommandGateway commandGateway;
-    private final QueryGateway queryGateway;
 
-    public OrdersCommandController(Environment env, CommandGateway commandGateway, QueryGateway queryGateway) {
+    public OrdersCommandController(Environment env, CommandGateway commandGateway) {
         this.env = env;
         this.commandGateway = commandGateway;
-        this.queryGateway = queryGateway;
     }
 
     @PostMapping
     public String createOrder(@Valid @RequestBody OrderDTO order) {
-        CreateOrderCommand command = CreateOrderCommand.builder()
+        CreateOrderCommand createOrderCommand = CreateOrderCommand.builder()
                 .orderId(UUID.randomUUID().toString())
                 .userId("27b95829-4f3f-4ddf-8983-151ba010e35b")
                 .productId(order.getProductId())
@@ -38,7 +35,7 @@ public class OrdersCommandController {
                 .addressId(order.getAddressId())
                 .orderStatus(OrderStatus.CREATED)
                 .build();
-        return commandGateway.sendAndWait(command);
+        return commandGateway.sendAndWait(createOrderCommand);
     }
 
     @PutMapping

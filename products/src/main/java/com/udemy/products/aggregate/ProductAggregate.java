@@ -2,6 +2,8 @@ package com.udemy.products.aggregate;
 
 import com.udemy.products.command.CreateProductCommand;
 import com.udemy.products.event.ProductCreatedEvent;
+import com.udemy.shared.command.ReserveProductCommand;
+import com.udemy.shared.event.ProductReservedEvent;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -32,12 +34,29 @@ public class ProductAggregate {
             throw new IllegalArgumentException("Title must not be empty");
         }
 
-        if (createCommand.getQuantity() < 0 ) {
+        if (createCommand.getQuantity() < 0) {
             throw new IllegalArgumentException("Quantity must not be less than 0");
         }
 
         ProductCreatedEvent event = new ProductCreatedEvent();
         BeanUtils.copyProperties(createCommand, event);
+        AggregateLifecycle.apply(event);
+    }
+
+    @CommandHandler
+    public void on(ReserveProductCommand command) {
+        if (quantity < command.getQuantity()) {
+            throw new IllegalArgumentException("No items of this type in stock");
+        }
+
+        ProductReservedEvent event = ProductReservedEvent.builder()
+                .orderId(command.getOrderId())
+                .userId(command.getUserId())
+                .productId(command.getProductId())
+                .quantity(command.getQuantity())
+                .build();
+
+
         AggregateLifecycle.apply(event);
     }
 
@@ -47,5 +66,10 @@ public class ProductAggregate {
         this.price = event.getPrice();
         this.quantity = event.getQuantity();
         this.title = event.getTitle();
+    }
+
+    @EventSourcingHandler
+    public void on(ProductReservedEvent event) {
+        this.quantity = this.quantity - event.getQuantity();
     }
 }
