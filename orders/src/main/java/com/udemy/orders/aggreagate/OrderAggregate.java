@@ -1,7 +1,9 @@
 package com.udemy.orders.aggreagate;
 
+import com.udemy.orders.command.ApproveOrderCommand;
 import com.udemy.orders.command.CreateOrderCommand;
 import com.udemy.orders.core.data.enums.OrderStatus;
+import com.udemy.orders.event.OrderApprovedEvent;
 import com.udemy.orders.event.OrderCreatedEvent;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,5 +42,18 @@ public class OrderAggregate {
         this.quantity = event.getQuantity();
         this.addressId = event.getAddressId();
         this.orderStatus = event.getOrderStatus();
+    }
+
+    @CommandHandler
+    public void handle(ApproveOrderCommand approveOrderCommand) {
+        OrderApprovedEvent approvedEvent =
+                new OrderApprovedEvent(approveOrderCommand.getOrderId());
+
+        AggregateLifecycle.apply(approvedEvent);
+    }
+
+    @EventSourcingHandler
+    public void on(OrderApprovedEvent orderApprovedEvent) {
+        this.orderStatus = orderApprovedEvent.getOrderStatus();
     }
 }
