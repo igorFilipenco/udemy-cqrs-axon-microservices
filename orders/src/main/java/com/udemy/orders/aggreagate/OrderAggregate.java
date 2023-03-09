@@ -5,6 +5,7 @@ import com.udemy.orders.command.CreateOrderCommand;
 import com.udemy.orders.core.data.enums.OrderStatus;
 import com.udemy.orders.event.OrderApprovedEvent;
 import com.udemy.orders.event.OrderCreatedEvent;
+import com.udemy.orders.event.OrderRejectedEvent;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
@@ -55,5 +56,10 @@ public class OrderAggregate {
     @EventSourcingHandler
     public void on(OrderApprovedEvent orderApprovedEvent) {
         this.orderStatus = orderApprovedEvent.getOrderStatus();
+    }
+
+    @EventSourcingHandler
+    public void on(OrderRejectedEvent orderRejectedEvent) {
+        this.orderStatus = orderRejectedEvent.getOrderStatus();
     }
 }

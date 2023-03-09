@@ -2,7 +2,9 @@ package com.udemy.products.aggregate;
 
 import com.udemy.products.command.CreateProductCommand;
 import com.udemy.products.event.ProductCreatedEvent;
+import com.udemy.shared.command.CancelProductReservationCommand;
 import com.udemy.shared.command.ReserveProductCommand;
+import com.udemy.shared.event.ProductReservationCancellationEvent;
 import com.udemy.shared.event.ProductReservedEvent;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
@@ -56,8 +58,19 @@ public class ProductAggregate {
                 .quantity(command.getQuantity())
                 .build();
 
-
         AggregateLifecycle.apply(event);
+    }
+
+    @CommandHandler
+    public void on(CancelProductReservationCommand command) {
+        AggregateLifecycle.apply(ProductReservationCancellationEvent.builder()
+                .orderId(command.getOrderId())
+                .productId(command.getProductId())
+                .userId(command.getUserId())
+                .quantity(command.getQuantity())
+                .reason(command.getReason())
+                .build()
+        );
     }
 
     @EventSourcingHandler
@@ -71,5 +84,10 @@ public class ProductAggregate {
     @EventSourcingHandler
     public void on(ProductReservedEvent event) {
         this.quantity = this.quantity - event.getQuantity();
+    }
+
+    @EventSourcingHandler
+    public void on(ProductReservationCancellationEvent event) {
+        this.quantity = this.quantity + event.getQuantity();
     }
 }

@@ -3,6 +3,7 @@ package com.udemy.products.query.projection;
 import com.udemy.products.core.data.ProductEntity;
 import com.udemy.products.core.repository.ProductsRepository;
 import com.udemy.products.event.ProductCreatedEvent;
+import com.udemy.shared.event.ProductReservationCancellationEvent;
 import com.udemy.shared.event.ProductReservedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
@@ -41,6 +42,15 @@ public class ProductEventHandler {
         ProductEntity updatedProduct = repository.findByProductId(event.getProductId());
         updatedProduct.setQuantity(updatedProduct.getQuantity() - event.getQuantity());
         log.info("Product reserved event was applied in event handler for product with id - " + event.getProductId());
+
+        repository.save(updatedProduct);
+    }
+
+    @EventHandler
+    public void on(ProductReservationCancellationEvent event) {
+        ProductEntity updatedProduct = repository.findByProductId(event.getProductId());
+        updatedProduct.setQuantity(updatedProduct.getQuantity() + event.getQuantity());
+        log.info("Product reserved cancellation event was applied in event handler for product with id - " + event.getProductId());
 
         repository.save(updatedProduct);
     }

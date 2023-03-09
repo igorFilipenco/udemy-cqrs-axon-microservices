@@ -37,4 +37,16 @@ public class OrderEventsHandler {
         order.setOrderStatus(approvedEvent.getOrderStatus());
         repository.save(order);
     }
+
+    @EventHandler
+    public void on(OrderRejectedEvent orderRejectedEvent) {
+        OrderEntity order = repository.findByOrderId(orderRejectedEvent.getOrderId());
+
+        if (Objects.isNull(order)) {
+            log.error("Error during rejecting order - no existing order with order id = " + orderRejectedEvent.getOrderId());
+        }
+
+        order.setOrderStatus(orderRejectedEvent.getOrderStatus());
+        repository.save(order);
+    }
 }

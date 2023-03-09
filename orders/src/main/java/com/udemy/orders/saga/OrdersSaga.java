@@ -1,11 +1,15 @@
 package com.udemy.orders.saga;
 
 import com.udemy.orders.command.ApproveOrderCommand;
+import com.udemy.orders.command.RejectOrderCommand;
 import com.udemy.orders.event.OrderApprovedEvent;
 import com.udemy.orders.event.OrderCreatedEvent;
+import com.udemy.orders.event.OrderRejectedEvent;
+import com.udemy.shared.command.CancelProductReservationCommand;
 import com.udemy.shared.command.ProcessPaymentCommand;
 import com.udemy.shared.command.ReserveProductCommand;
 import com.udemy.shared.event.PaymentProcessedEvent;
+import com.udemy.shared.event.ProductReservationCancellationEvent;
 import com.udemy.shared.event.ProductReservedEvent;
 import com.udemy.shared.model.User;
 import com.udemy.shared.query.FetchUserPaymentDetailsQuery;
@@ -59,12 +63,12 @@ public class OrdersSaga {
         try {
             userPaymentDetails = queryGateway.query(query, ResponseTypes.instanceOf(User.class)).join();
         } catch (Exception e) {
-            //compensating transaction
+            cancelProductReservation(event, e.getMessage());
             return;
         }
 
         if (Objects.isNull(userPaymentDetails)) {
-            //compensating transaction
+            cancelProductReservation(event, "[FAILURE] - Product reservation failed - user with id = " + event.getUserId() + " not found");
             return;
         }
 
@@ -82,11 +86,13 @@ public class OrdersSaga {
             result = commandGateway.sendAndWait(processPaymentCommand, 10, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.error(e.getMessage());
-            //compensating transaction
+            cancelProductReservation(event, e.getMessage());
+            return;
         }
 
         if (Objects.isNull(result)) {
-            log.info("Somethiong wrong in process payment transaction. Starting compensating transaction");
+            cancelProductReservation(event, "Somethiong wrong in process payment transaction for order with id = " + event.getOrderId());
+            log.info("Something wrong in process payment transaction. Starting compensating transaction");
         }
     }
 
@@ -95,6 +101,31 @@ public class OrdersSaga {
         ApproveOrderCommand approveOrderCommand =
                 new ApproveOrderCommand(paymentProcessedEvent.getOrderId());
         commandGateway.send(approveOrderCommand);
+    }
+
+    private void cancelProductReservation(ProductReservedEvent event, String reason) {
+        CancelProductReservationCommand cancelReserveCommand = CancelProductReservationCommand.builder()
+                .orderId(event.getOrderId())
+                .userId(event.getUserId())
+                .quantity(event.getQuantity())
+                .productId(event.getProductId())
+                .reason(reason)
+                .build();
+        commandGateway.send(cancelReserveCommand);
+    }
+
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(ProductReservationCancellationEvent cancellationEvent) {
+        commandGateway.send(RejectOrderCommand.builder()
+                .orderId(cancellationEvent.getOrderId())
+                .reason(cancellationEvent.getReason())
+        );
+    }
+
+    @EndSaga
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(OrderRejectedEvent orderRejectedEvent) {
+        log.info("Order is rejected!");
     }
 
     @EndSaga
