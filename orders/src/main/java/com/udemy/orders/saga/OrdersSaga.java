@@ -15,6 +15,8 @@ import com.udemy.shared.model.User;
 import com.udemy.shared.query.FetchUserPaymentDetailsQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.deadline.DeadlineManager;
+import org.axonframework.deadline.annotation.DeadlineHandler;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
@@ -23,9 +25,10 @@ import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -35,6 +38,12 @@ public class OrdersSaga {
     private transient CommandGateway commandGateway;
     @Autowired
     private transient QueryGateway queryGateway;
+
+    @Autowired
+    private transient DeadlineManager deadlineManager;
+
+    private static final String PAYMENT_PROCESSING_TIMEOUT_DEADLINE = "payment-processing-deadline";
+    private static String scheduleId;
 
     @StartSaga
     @SagaEventHandler(associationProperty = "orderId")
@@ -74,6 +83,8 @@ public class OrdersSaga {
 
         log.info("Successfully fetched user payment details for user with id= " + event.getUserId());
 
+        scheduleId = deadlineManager.schedule(Duration.of(120, ChronoUnit.SECONDS), PAYMENT_PROCESSING_TIMEOUT_DEADLINE, event);
+
         ProcessPaymentCommand processPaymentCommand = ProcessPaymentCommand.builder()
                 .orderId(event.getOrderId())
                 .paymentDetails(userPaymentDetails.getPaymentDetails())
@@ -83,7 +94,7 @@ public class OrdersSaga {
         String result = null;
 
         try {
-            result = commandGateway.sendAndWait(processPaymentCommand, 10, TimeUnit.SECONDS);
+            result = commandGateway.sendAndWait(processPaymentCommand);
         } catch (Exception e) {
             log.error(e.getMessage());
             cancelProductReservation(event, e.getMessage());
@@ -98,20 +109,29 @@ public class OrdersSaga {
 
     @SagaEventHandler(associationProperty = "orderId")
     public void handle(PaymentProcessedEvent paymentProcessedEvent) {
+        cancelDeadline();
         ApproveOrderCommand approveOrderCommand =
                 new ApproveOrderCommand(paymentProcessedEvent.getOrderId());
         commandGateway.send(approveOrderCommand);
     }
 
+    private void cancelDeadline() {
+        if (Objects.nonNull(scheduleId)) {
+            deadlineManager.cancelSchedule(PAYMENT_PROCESSING_TIMEOUT_DEADLINE, scheduleId);
+        }
+        scheduleId = null;
+    }
+
     private void cancelProductReservation(ProductReservedEvent event, String reason) {
-        CancelProductReservationCommand cancelReserveCommand = CancelProductReservationCommand.builder()
+        cancelDeadline();
+
+        commandGateway.send(CancelProductReservationCommand.builder()
                 .orderId(event.getOrderId())
                 .userId(event.getUserId())
                 .quantity(event.getQuantity())
                 .productId(event.getProductId())
                 .reason(reason)
-                .build();
-        commandGateway.send(cancelReserveCommand);
+                .build());
     }
 
     @SagaEventHandler(associationProperty = "orderId")
@@ -119,6 +139,7 @@ public class OrdersSaga {
         commandGateway.send(RejectOrderCommand.builder()
                 .orderId(cancellationEvent.getOrderId())
                 .reason(cancellationEvent.getReason())
+                .build()
         );
     }
 
@@ -132,5 +153,12 @@ public class OrdersSaga {
     @SagaEventHandler(associationProperty = "orderId")
     public void handle(OrderApprovedEvent orderApprovedEvent) {
         log.info("Order is approved!");
+    }
+
+    @DeadlineHandler(deadlineName = PAYMENT_PROCESSING_TIMEOUT_DEADLINE)
+    public void handlePaymentDeadline(ProductReservedEvent productReservedEvent) {
+        log.info("Payment processing deadline. Sending compensation command to cancel product reserve");
+        cancelProductReservation(productReservedEvent,
+                "Payment deadline failed due to payment timeout. Cancelling product reserve");
     }
 }

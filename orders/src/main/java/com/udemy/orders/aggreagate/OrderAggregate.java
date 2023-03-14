@@ -2,6 +2,7 @@ package com.udemy.orders.aggreagate;
 
 import com.udemy.orders.command.ApproveOrderCommand;
 import com.udemy.orders.command.CreateOrderCommand;
+import com.udemy.orders.command.RejectOrderCommand;
 import com.udemy.orders.core.data.enums.OrderStatus;
 import com.udemy.orders.event.OrderApprovedEvent;
 import com.udemy.orders.event.OrderCreatedEvent;
@@ -51,6 +52,13 @@ public class OrderAggregate {
                 new OrderApprovedEvent(approveOrderCommand.getOrderId());
 
         AggregateLifecycle.apply(approvedEvent);
+    }
+
+    @CommandHandler
+    public void handle(RejectOrderCommand rejectOrderCommand) {
+        OrderRejectedEvent rejectedEvent =
+                new OrderRejectedEvent(rejectOrderCommand.getOrderId(), rejectOrderCommand.getReason(), OrderStatus.REJECTED);
+        AggregateLifecycle.apply(rejectedEvent);
     }
 
     @EventSourcingHandler
