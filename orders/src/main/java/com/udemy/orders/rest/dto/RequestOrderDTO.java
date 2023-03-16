@@ -12,7 +12,7 @@ import javax.validation.constraints.NotBlank;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderDTO {
+public class RequestOrderDTO {
     @NotBlank(message = "Order productId is a required field")
     private String productId;
     @Min(value = 1, message = "Quantity cannot be lower than 1")

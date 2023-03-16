@@ -5,6 +5,7 @@ import com.udemy.orders.command.RejectOrderCommand;
 import com.udemy.orders.event.OrderApprovedEvent;
 import com.udemy.orders.event.OrderCreatedEvent;
 import com.udemy.orders.event.OrderRejectedEvent;
+import com.udemy.orders.rest.dto.ResponseOrderDTO;
 import com.udemy.shared.command.CancelProductReservationCommand;
 import com.udemy.shared.command.ProcessPaymentCommand;
 import com.udemy.shared.command.ReserveProductCommand;
@@ -22,6 +23,7 @@ import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
+import org.axonframework.queryhandling.QueryUpdateEmitter;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -42,24 +44,32 @@ public class OrdersSaga {
     @Autowired
     private transient DeadlineManager deadlineManager;
 
+    @Autowired
+    private transient QueryUpdateEmitter queryUpdateEmitter;
+
     private static final String PAYMENT_PROCESSING_TIMEOUT_DEADLINE = "payment-processing-deadline";
     private static String scheduleId;
 
     @StartSaga
     @SagaEventHandler(associationProperty = "orderId")
-    public void handle(OrderCreatedEvent event) {
+    public void handle(OrderCreatedEvent orderCreatedEvent) {
         ReserveProductCommand reserveProductCommand = ReserveProductCommand.builder()
-                .orderId(event.getOrderId())
-                .productId(event.getProductId())
-                .userId(event.getUserId())
-                .quantity(event.getQuantity())
+                .orderId(orderCreatedEvent.getOrderId())
+                .productId(orderCreatedEvent.getProductId())
+                .userId(orderCreatedEvent.getUserId())
+                .quantity(orderCreatedEvent.getQuantity())
                 .build();
         commandGateway.send(reserveProductCommand, (commandMessage, commandResultMessage) -> {
             if (commandResultMessage.isExceptional()) {
                 log.error("Something went wrong during product reserve: " + commandResultMessage.exceptionResult().getMessage());
+                commandGateway.send(RejectOrderCommand.builder()
+                        .orderId(orderCreatedEvent.getOrderId())
+                        .reason(commandResultMessage.exceptionResult().getMessage())
+                        .build()
+                );
             }
         });
-        log.info("Created order command fired! Order id = " + event.getOrderId());
+        log.info("Created order command fired! Order id = " + orderCreatedEvent.getOrderId());
     }
 
     @SagaEventHandler(associationProperty = "orderId")
@@ -147,12 +157,18 @@ public class OrdersSaga {
     @SagaEventHandler(associationProperty = "orderId")
     public void handle(OrderRejectedEvent orderRejectedEvent) {
         log.info("Order is rejected!");
+        queryUpdateEmitter.emit(ResponseOrderDTO.class,
+                query-> true,
+                new ResponseOrderDTO(orderRejectedEvent.getOrderId(), orderRejectedEvent.getReason(), orderRejectedEvent.getOrderStatus()));
     }
 
     @EndSaga
     @SagaEventHandler(associationProperty = "orderId")
     public void handle(OrderApprovedEvent orderApprovedEvent) {
         log.info("Order is approved!");
+        queryUpdateEmitter.emit(ResponseOrderDTO.class,
+                query-> true,
+                new ResponseOrderDTO(orderApprovedEvent.getOrderId(), "", orderApprovedEvent.getOrderStatus()));
     }
 
     @DeadlineHandler(deadlineName = PAYMENT_PROCESSING_TIMEOUT_DEADLINE)
