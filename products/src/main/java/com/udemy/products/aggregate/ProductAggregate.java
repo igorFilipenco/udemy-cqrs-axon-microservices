@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 
 
 @NoArgsConstructor
-@Aggregate
+@Aggregate(snapshotTriggerDefinition = "productSnapshotTriggerDefinition")
 public class ProductAggregate {
     @AggregateIdentifier
     private String productId;
