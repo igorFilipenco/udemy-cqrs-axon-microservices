@@ -37,7 +37,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"title\": \"iPhone11\",\n    \"price\": 1200,\n    \"quantity\": 1\n}",
+							"raw": "{\n    \"title\": \"Samsung Galaxy S23\",\n    \"price\": 1000,\n    \"quantity\": 5\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -60,6 +60,40 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "replayProductEvents",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"iPhone11\",\n    \"price\": 1200,\n    \"quantity\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8090/products-service/api/v1/management/event-processor/product-group/reset",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"products-service",
+								"api",
+								"v1",
+								"management",
+								"event-processor",
+								"product-group",
+								"reset"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -73,7 +107,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"productId\": \"testId\",\n    \"addressId\": \"addressId\",\n    \"price\": 1200,\n    \"quantity\": 1\n}",
+							"raw": "{\n    \"productId\": \"f7854a59-e719-4573-ae08-c0b0260343dd\",\n    \"addressId\": \"fake_address3\",\n    \"quantity\": 1\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -115,7 +149,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8090/orders-service/api/v1/orders/ec74ae47-bb07-4dff-8620-91d5a47f78a2\t",
+							"raw": "http://localhost:8090/orders-service/api/v1/orders/d93ca965-55c9-4b6f-a6e7-467b35149a53",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -126,7 +160,7 @@
 								"api",
 								"v1",
 								"orders",
-								"ec74ae47-bb07-4dff-8620-91d5a47f78a2\t"
+								"d93ca965-55c9-4b6f-a6e7-467b35149a53"
 							]
 						}
 					},

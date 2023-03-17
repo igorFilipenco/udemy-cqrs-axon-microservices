@@ -6,7 +6,9 @@ import com.udemy.products.event.ProductCreatedEvent;
 import com.udemy.shared.event.ProductReservationCancellationEvent;
 import com.udemy.shared.event.ProductReservedEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.ResetHandler;
 import org.axonframework.messaging.interceptors.ExceptionHandler;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@ProcessingGroup("product-group")
 public class ProductEventHandler {
     ProductsRepository repository;
 
@@ -53,5 +56,10 @@ public class ProductEventHandler {
         log.info("Product reserved cancellation event was applied in event handler for product with id - " + event.getProductId());
 
         repository.save(updatedProduct);
+    }
+
+    @ResetHandler
+    public void reset() {
+        repository.deleteAll();
     }
 }

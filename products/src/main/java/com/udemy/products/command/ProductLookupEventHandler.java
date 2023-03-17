@@ -6,6 +6,7 @@ import com.udemy.products.core.repository.ProductLookupRepository;
 import com.udemy.products.event.ProductCreatedEvent;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.ResetHandler;
 import org.springframework.stereotype.Component;
 
 
@@ -23,5 +24,10 @@ public class ProductLookupEventHandler {
         ProductLookupEntity productLookup = new ProductLookupEntity(event.getProductId(), event.getTitle());
 
         repository.save(productLookup);
+    }
+
+    @ResetHandler
+    public void reset() {
+        repository.deleteAll();
     }
 }
